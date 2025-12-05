@@ -272,6 +272,57 @@ Or use the included `img` folder structure from your export.
 
 ---
 
+#### 👁️ Imported products not visible in Front Office
+
+**Cause:** Missing `ps_product_shop` records or incorrect visibility settings
+
+**Symptoms:**
+- Products appear correctly in Back Office
+- Products **don't show** in Front Office (categories, search, product page)
+- New products created in PS 9 work fine
+- Only imported products have this issue
+
+**Solution:**
+
+This is the **#1 most common issue** after migration. We've created a complete fix:
+
+1. **Run diagnostic:**
+   - Download `DIAGNOSTIC_PRODUCT_VISIBILITY.sql` from the exporter repo
+   - Execute in phpMyAdmin
+   - Review which problems affect your products
+
+2. **Apply automatic fix:**
+   - Download `FIX_PRODUCT_VISIBILITY.sql`
+   - **Make a backup first!**
+   - Execute in phpMyAdmin
+   - Script fixes 8 common issues automatically
+
+3. **Clear cache (REQUIRED):**
+   ```bash
+   cd /path/to/prestashop
+   rm -rf var/cache/*
+   ```
+
+4. **Regenerate search index:**
+   - Back Office → Preferences → Search
+   - Click "Regenerate entire index"
+
+5. **Verify:**
+   - Check products in Front Office
+   - Test categories and search
+
+📖 **Complete guide:** See [README_PRODUCT_VISIBILITY.md](https://github.com/droidhispalis/Migration-Prestashop-1.7-to-9/blob/main/README_PRODUCT_VISIBILITY.md) in the exporter repository.
+
+**What the fix does:**
+- ✅ Creates missing `ps_product_shop` records
+- ✅ Sets visibility to 'both'
+- ✅ Assigns products to categories
+- ✅ Generates missing link_rewrite URLs
+- ✅ Configures stock properly
+- ✅ Marks products for reindexing
+
+---
+
 ## 📊 What Gets Imported?
 
 ### Core Data ✅
