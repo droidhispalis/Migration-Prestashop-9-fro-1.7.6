@@ -70,8 +70,22 @@ class Psimporter9from178 extends Module
             $output .= $this->manualFixData();
         }
         
+        // Post-Import SQL Fixes
+        if (Tools::isSubmit('submitCreateCategoryGroup')) {
+            $output .= $this->executeCreateCategoryGroup();
+        }
+        
+        if (Tools::isSubmit('submitFixProductShop')) {
+            $output .= $this->executeFixProductShop();
+        }
+        
+        if (Tools::isSubmit('submitRunFullDiagnostic')) {
+            $output .= $this->executeFullDiagnostic();
+        }
+        
         // Mostrar formularios
         $output .= $this->renderInfo();
+        $output .= $this->renderPostImportFixes();
         $output .= $this->renderDiagnosticButton();
         $output .= $this->renderImportDatabaseForm();
         $output .= $this->renderImportImagesForm();
@@ -1107,6 +1121,266 @@ class Psimporter9from178 extends Module
         }
         
         return $values;
+    }
+    
+    // ========================================================================
+    // POST-IMPORT SQL FIXES
+    // ========================================================================
+    
+    private function renderPostImportFixes()
+    {
+        $html = '<div class="panel">';
+        $html .= '<div class="panel-heading"><h3>⚙️ Post-Import Fixes (CRITICAL)</h3></div>';
+        $html .= '<div class="panel-body">';
+        $html .= '<div class="alert alert-warning">';
+        $html .= '<strong>⚠️ Run these fixes AFTER importing database if products are not visible in Front Office</strong>';
+        $html .= '</div>';
+        
+        $html .= '<div class="row">';
+        
+        // Diagnostic
+        $html .= '<div class="col-md-4">';
+        $html .= '<div class="panel panel-info">';
+        $html .= '<div class="panel-heading"><strong>1. Diagnostic</strong></div>';
+        $html .= '<div class="panel-body">';
+        $html .= '<p>Check what\'s missing in your database</p>';
+        $html .= '<form method="POST">';
+        $html .= '<button type="submit" name="submitRunFullDiagnostic" class="btn btn-info btn-block">🔍 Run Diagnostic</button>';
+        $html .= '</form>';
+        $html .= '</div></div></div>';
+        
+        // Fix Category Group
+        $html .= '<div class="col-md-4">';
+        $html .= '<div class="panel panel-warning">';
+        $html .= '<div class="panel-heading"><strong>2. Fix Category Permissions</strong></div>';
+        $html .= '<div class="panel-body">';
+        $html .= '<p>Create ps_category_group table and assign permissions</p>';
+        $html .= '<form method="POST" onsubmit="return confirm(\'This will create/update category permissions. Continue?\');">';
+        $html .= '<button type="submit" name="submitCreateCategoryGroup" class="btn btn-warning btn-block">🔧 Fix Permissions</button>';
+        $html .= '</form>';
+        $html .= '</div></div></div>';
+        
+        // Fix Product Shop
+        $html .= '<div class="col-md-4">';
+        $html .= '<div class="panel panel-success">';
+        $html .= '<div class="panel-heading"><strong>3. Fix Product Visibility</strong></div>';
+        $html .= '<div class="panel-body">';
+        $html .= '<p>Create missing ps_product_shop records</p>';
+        $html .= '<form method="POST" onsubmit="return confirm(\'This will create missing product-shop associations. Continue?\');">';
+        $html .= '<button type="submit" name="submitFixProductShop" class="btn btn-success btn-block">✅ Fix Products</button>';
+        $html .= '</form>';
+        $html .= '</div></div></div>';
+        
+        $html .= '</div>'; // row
+        
+        $html .= '<div class="alert alert-info" style="margin-top:15px;">';
+        $html .= '<strong>📋 Recommended Order:</strong><br>';
+        $html .= '1. Run Diagnostic → 2. Fix Category Permissions → 3. Fix Product Visibility → 4. Clear Cache';
+        $html .= '</div>';
+        
+        $html .= '</div></div>';
+        return $html;
+    }
+    
+    private function executeFullDiagnostic()
+    {
+        $sqlFile = dirname(__FILE__) . '/sql/DIAGNOSTIC_SIMPLE.sql';
+        
+        if (!file_exists($sqlFile)) {
+            return '<div class="alert alert-danger">❌ Diagnostic SQL file not found: ' . $sqlFile . '</div>';
+        }
+        
+        $sqlContent = file_get_contents($sqlFile);
+        if (!$sqlContent) {
+            return '<div class="alert alert-danger">❌ Could not read diagnostic SQL file</div>';
+        }
+        
+        $html = '<div class="alert alert-success"><strong>🔍 Running Full Diagnostic...</strong></div>';
+        
+        try {
+            $db = Db::getInstance();
+            
+            // Ejecutar el SQL y capturar resultados
+            $queries = array_filter(array_map('trim', explode(';', $sqlContent)));
+            $results = array();
+            
+            foreach ($queries as $query) {
+                if (empty($query) || substr(trim($query), 0, 2) === '--') {
+                    continue;
+                }
+                
+                try {
+                    $result = $db->executeS($query);
+                    if ($result) {
+                        $results[] = $result;
+                    }
+                } catch (Exception $e) {
+                    // Ignorar errores de SELECT informativos
+                    continue;
+                }
+            }
+            
+            // Mostrar resultados
+            $html .= '<div class="panel panel-default">';
+            $html .= '<div class="panel-heading"><strong>📊 Diagnostic Results</strong></div>';
+            $html .= '<div class="panel-body">';
+            
+            foreach ($results as $idx => $resultSet) {
+                if (!empty($resultSet)) {
+                    $html .= '<table class="table table-striped table-bordered" style="margin-bottom:20px;">';
+                    $html .= '<thead><tr>';
+                    foreach (array_keys($resultSet[0]) as $header) {
+                        $html .= '<th>' . htmlspecialchars($header) . '</th>';
+                    }
+                    $html .= '</tr></thead><tbody>';
+                    
+                    foreach ($resultSet as $row) {
+                        $html .= '<tr>';
+                        foreach ($row as $value) {
+                            $html .= '<td>' . htmlspecialchars($value) . '</td>';
+                        }
+                        $html .= '</tr>';
+                    }
+                    $html .= '</tbody></table>';
+                }
+            }
+            
+            $html .= '</div></div>';
+            
+        } catch (Exception $e) {
+            $html .= '<div class="alert alert-danger">❌ Error running diagnostic: ' . $e->getMessage() . '</div>';
+        }
+        
+        return $html;
+    }
+    
+    private function executeCreateCategoryGroup()
+    {
+        $sqlFile = dirname(__FILE__) . '/sql/CREATE_CATEGORY_GROUP.sql';
+        
+        if (!file_exists($sqlFile)) {
+            return '<div class="alert alert-danger">❌ SQL file not found: ' . $sqlFile . '</div>';
+        }
+        
+        $sqlContent = file_get_contents($sqlFile);
+        if (!$sqlContent) {
+            return '<div class="alert alert-danger">❌ Could not read SQL file</div>';
+        }
+        
+        $html = '<div class="alert alert-info"><strong>🔧 Creating/Fixing Category Permissions...</strong></div>';
+        
+        try {
+            $db = Db::getInstance();
+            $queries = array_filter(array_map('trim', explode(';', $sqlContent)));
+            $executedCount = 0;
+            $errors = array();
+            
+            foreach ($queries as $query) {
+                if (empty($query) || substr(trim($query), 0, 2) === '--') {
+                    continue;
+                }
+                
+                try {
+                    $db->execute($query);
+                    $executedCount++;
+                } catch (Exception $e) {
+                    $errors[] = $e->getMessage();
+                }
+            }
+            
+            if (empty($errors)) {
+                $html .= '<div class="alert alert-success">';
+                $html .= '<h4>✅ Category Permissions Fixed Successfully!</h4>';
+                $html .= '<p><strong>Executed:</strong> ' . $executedCount . ' queries</p>';
+                $html .= '<p><strong>Next Steps:</strong></p>';
+                $html .= '<ol>';
+                $html .= '<li>Clear cache: Performance → Clear cache</li>';
+                $html .= '<li>Regenerate search index: Preferences → Search</li>';
+                $html .= '<li>Run "Fix Product Visibility" if products still not visible</li>';
+                $html .= '</ol>';
+                $html .= '</div>';
+            } else {
+                $html .= '<div class="alert alert-warning">';
+                $html .= '<h4>⚠️ Completed with warnings</h4>';
+                $html .= '<p>Some queries failed (this may be normal):</p>';
+                $html .= '<ul>';
+                foreach (array_slice($errors, 0, 5) as $error) {
+                    $html .= '<li>' . htmlspecialchars($error) . '</li>';
+                }
+                $html .= '</ul>';
+                $html .= '</div>';
+            }
+            
+        } catch (Exception $e) {
+            $html .= '<div class="alert alert-danger">❌ Fatal error: ' . $e->getMessage() . '</div>';
+        }
+        
+        return $html;
+    }
+    
+    private function executeFixProductShop()
+    {
+        $sqlFile = dirname(__FILE__) . '/sql/FIX_SIMPLE.sql';
+        
+        if (!file_exists($sqlFile)) {
+            return '<div class="alert alert-danger">❌ SQL file not found: ' . $sqlFile . '</div>';
+        }
+        
+        $sqlContent = file_get_contents($sqlFile);
+        if (!$sqlContent) {
+            return '<div class="alert alert-danger">❌ Could not read SQL file</div>';
+        }
+        
+        $html = '<div class="alert alert-info"><strong>✅ Fixing Product-Shop Associations...</strong></div>';
+        
+        try {
+            $db = Db::getInstance();
+            $queries = array_filter(array_map('trim', explode(';', $sqlContent)));
+            $executedCount = 0;
+            $errors = array();
+            
+            foreach ($queries as $query) {
+                if (empty($query) || substr(trim($query), 0, 2) === '--') {
+                    continue;
+                }
+                
+                try {
+                    $db->execute($query);
+                    $executedCount++;
+                } catch (Exception $e) {
+                    $errors[] = $e->getMessage();
+                }
+            }
+            
+            if (empty($errors)) {
+                $html .= '<div class="alert alert-success">';
+                $html .= '<h4>✅ Product Visibility Fixed Successfully!</h4>';
+                $html .= '<p><strong>Executed:</strong> ' . $executedCount . ' queries</p>';
+                $html .= '<p><strong>All products are now linked to your shop!</strong></p>';
+                $html .= '<p><strong>MANDATORY Next Steps:</strong></p>';
+                $html .= '<ol>';
+                $html .= '<li><strong>Clear cache immediately</strong>: Performance → Clear cache</li>';
+                $html .= '<li><strong>Regenerate search index</strong>: Preferences → Search → Rebuild index</li>';
+                $html .= '<li>Verify products are visible in Front Office</li>';
+                $html .= '</ol>';
+                $html .= '</div>';
+            } else {
+                $html .= '<div class="alert alert-warning">';
+                $html .= '<h4>⚠️ Completed with warnings</h4>';
+                $html .= '<p>Some queries failed (this may be normal if records already exist):</p>';
+                $html .= '<ul>';
+                foreach (array_slice($errors, 0, 5) as $error) {
+                    $html .= '<li>' . htmlspecialchars($error) . '</li>';
+                }
+                $html .= '</ul>';
+                $html .= '</div>';
+            }
+            
+        } catch (Exception $e) {
+            $html .= '<div class="alert alert-danger">❌ Fatal error: ' . $e->getMessage() . '</div>';
+        }
+        
+        return $html;
     }
 }
 
