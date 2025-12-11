@@ -775,6 +775,160 @@ https://your-store.com/modules/psimporter9from178/diagnostic.php
 
 ---
 
+## ⚠️ Known Issues & Solutions
+
+### 🔴 CRITICAL: Products Disappeared After Post-Import Fixes
+
+**Symptom:**
+- Products showed correctly before running post-import fixes
+- After executing `FIX_SIMPLE.sql` → **"Productos (0)"**
+- Categories show count but products invisible
+- Console error: "No tiene acceso a este producto"
+
+**Cause:**
+Original `FIX_SIMPLE.sql` and `CREATE_CATEGORY_GROUP.sql` scripts used unsafe SQL patterns:
+```sql
+-- ❌ DANGEROUS: Can delete existing relationships
+LEFT JOIN ps_product_shop ps ON p.id_product = ps.id_product
+WHERE ps.id_product IS NULL
+```
+
+This pattern can accidentally delete existing `ps_product_shop` relationships when run multiple times.
+
+**✅ SOLUTION: Use Fixed Scripts**
+
+**New safe scripts available in `/sql/` folder:**
+- ✅ `RECUPERAR_PRODUCTOS_FIXED.sql` - **Recovers disappeared products**
+- ✅ `DIAGNOSTICO_SIMPLE_FIXED.sql` - Detailed diagnostic
+- ⚠️ **Do NOT use** old `RECUPERAR_PRODUCTOS.sql` (has syntax errors)
+
+**Recovery Steps (3 minutes):**
+
+1. **Backup first:**
+   ```bash
+   mysqldump prestashop9 > backup_recovery.sql
+   ```
+
+2. **Execute recovery script:**
+   - Open phpMyAdmin
+   - **IMPORTANT:** Select your PrestaShop database in left panel
+   - Go to SQL tab
+   - Copy entire content of `sql/RECUPERAR_PRODUCTOS_FIXED.sql`
+   - Paste and execute
+   - Wait for "Recuperación completada" message
+
+3. **Clear cache (CRITICAL):**
+   ```
+   Back Office → Advanced Parameters → Performance → Clear cache
+   ```
+
+4. **Regenerate search index:**
+   ```
+   Back Office → Shop Parameters → Search → Rebuild index
+   ```
+
+5. **Verify:**
+   - Back Office → Catalog → Products
+   - Should show "Productos (X)" with X > 0
+   - Refresh page (F5) if needed
+
+**📖 Complete Guide:** See [SOLUCION_RAPIDA.md](./SOLUCION_RAPIDA.md) for detailed instructions.
+
+**❓ Common Errors:** See [ERRORES_COMUNES.md](./ERRORES_COMUNES.md) for troubleshooting.
+
+**Key Differences in Fixed Scripts:**
+```sql
+-- ✅ NEW (Safe): Uses NOT EXISTS
+WHERE NOT EXISTS (
+    SELECT 1 FROM ps_product_shop ps 
+    WHERE ps.id_product = p.id_product 
+    AND ps.id_shop = @shop_id
+)
+
+-- ❌ OLD (Dangerous): Uses LEFT JOIN + WHERE NULL
+LEFT JOIN ps_product_shop ps ON p.id_product = ps.id_product
+WHERE ps.id_product IS NULL
+```
+
+The `NOT EXISTS` pattern only adds missing entries, never modifies existing ones.
+
+---
+
+### 🟡 Error #1146: Table 'migration.ps_product' doesn't exist
+
+**Symptom:**
+SQL script fails with "Table doesn't exist" error.
+
+**Cause:**
+Database not selected in phpMyAdmin before executing script.
+
+**✅ Solution:**
+1. Open phpMyAdmin
+2. **Click on your database name** in left panel (migration, toprelieve, prestashop9, etc.)
+3. Ensure database is highlighted/selected
+4. NOW execute the SQL script
+
+---
+
+### 🟡 Products Visible in Back Office but NOT in Front Office
+
+**Symptom:**
+- Products appear in Back Office catalog
+- Front Office shows empty categories or "No products found"
+
+**✅ Solution:**
+
+1. **Check category permissions:**
+   ```sql
+   -- Execute in phpMyAdmin:
+   INSERT IGNORE INTO ps_category_group (id_category, id_group)
+   SELECT c.id_category, 1 FROM ps_category c WHERE c.active = 1;
+   INSERT IGNORE INTO ps_category_group (id_category, id_group)
+   SELECT c.id_category, 2 FROM ps_category c WHERE c.active = 1;
+   INSERT IGNORE INTO ps_category_group (id_category, id_group)
+   SELECT c.id_category, 3 FROM ps_category c WHERE c.active = 1;
+   ```
+
+2. **Check product visibility:**
+   ```sql
+   UPDATE ps_product SET visibility = 'both' WHERE visibility = 'none';
+   UPDATE ps_product_shop SET visibility = 'both' WHERE visibility = 'none';
+   ```
+
+3. **Regenerate URLs:**
+   ```
+   Back Office → Shop Parameters → SEO & URLs → Regenerate URLs
+   ```
+
+4. **Clear browser cache:** Ctrl + Shift + R
+
+---
+
+### 🟡 Duplicate Entry Error During Recovery
+
+**Symptom:**
+```
+Duplicate entry '1-1' for key 'PRIMARY'
+```
+
+**Cause:**
+Product already has `ps_product_shop` entry (this is actually GOOD).
+
+**✅ Solution:**
+This is **normal** and **safe to ignore**. The script uses `INSERT` (not `INSERT IGNORE`) to ensure data integrity. It will continue processing other products that actually need recovery.
+
+If you want zero errors, execute `DIAGNOSTICO_SIMPLE_FIXED.sql` first to see which products need fixing.
+
+---
+
+## 📖 Troubleshooting Resources
+
+- 📕 [SOLUCION_RAPIDA.md](./SOLUCION_RAPIDA.md) - Quick recovery guide (Spanish)
+- 📗 [ERRORES_COMUNES.md](./ERRORES_COMUNES.md) - Common errors & solutions (Spanish)
+- 📘 [RECUPERACION_PRODUCTOS.md](./RECUPERACION_PRODUCTOS.md) - Technical recovery documentation
+
+---
+
 ## 🆘 Support
 
 ### Issues & Questions
