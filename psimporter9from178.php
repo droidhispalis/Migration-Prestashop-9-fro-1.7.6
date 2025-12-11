@@ -18,7 +18,7 @@ class Psimporter9from178 extends Module
     {
         $this->name = 'psimporter9from178';
         $this->tab = 'migration_tools';
-        $this->version = '1.0.0';
+        $this->version = '2.0.1';
         $this->author = 'Migration Tools';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '9.0.0', 'max' => '9.99.99');
@@ -50,6 +50,10 @@ class Psimporter9from178 extends Module
 
     public function getContent()
     {
+        // Cargar CSS y JS del módulo
+        $this->context->controller->addCSS($this->_path . 'views/css/admin.css');
+        $this->context->controller->addJS($this->_path . 'views/js/admin.js');
+        
         // Renderizar directamente en la configuración del módulo
         $output = '';
         

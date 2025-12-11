@@ -5,6 +5,28 @@ All notable changes to the PrestaShop 9 Database Importer module will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-01-19
+
+### Added
+- 📁 Complete PrestaShop standard directory structure
+- 🎨 Professional admin CSS styling (`views/css/admin.css`)
+- ⚡ Interactive JavaScript functionality (`views/js/admin.js`)
+- 🌐 Translation system with Spanish and English support
+- 🔒 Security index.php files in all directories
+- 📊 Improved UI with progress bars, notifications, and animations
+- 🎯 Enhanced user experience with hover effects and visual feedback
+
+### Changed
+- ✨ Module now follows PrestaShop best practices for directory structure
+- 🔧 CSS and JS files automatically loaded in Back Office
+- 📱 Responsive design for better mobile experience
+
+### Technical
+- Added `views/` folder with templates, css, and js subfolders
+- Added `translations/` folder with es.php and en.php
+- Security improvements with proper directory protection
+- Better code organization following PrestaShop standards
+
 ## [1.0.0] - 2025-12-05
 
 ### Added

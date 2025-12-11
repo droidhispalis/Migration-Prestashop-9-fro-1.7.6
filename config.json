@@ -1,7 +1,7 @@
 {
   "name": "psimporter9from178",
   "displayName": "Migration Importer from PS 1.7.8",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "description": "Import database, images and themes exported from PrestaShop 1.7.6/1.7.8 into PrestaShop 9. Essential tool for migrating your store data.",
   "author": "Migration Tools",
   "tab": "migration_tools",

@@ -1,0 +1,240 @@
+/**
+ * PrestaShop 9 Importer Module - Admin Styles
+ * Version: 2.0.0
+ */
+
+/* Panel principal */
+.psimporter-panel {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.psimporter-panel-heading {
+    background: #25b9d7;
+    color: #fff;
+    padding: 15px;
+    margin: -20px -20px 20px -20px;
+    border-radius: 4px 4px 0 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.psimporter-panel-heading i {
+    margin-right: 8px;
+}
+
+/* Botones de fix */
+.psimporter-fix-button {
+    display: inline-block;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.psimporter-fix-button:hover {
+    border-color: #25b9d7;
+    background: #e7f6f9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.psimporter-fix-button h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.psimporter-fix-button.critical h4::after {
+    content: " ⚠️";
+    color: #ff9800;
+}
+
+.psimporter-fix-button p {
+    margin: 0 0 10px 0;
+    color: #666;
+    font-size: 13px;
+}
+
+.psimporter-fix-button .btn {
+    margin-top: 10px;
+}
+
+/* Alertas */
+.psimporter-alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.psimporter-alert-info {
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    color: #31708f;
+}
+
+.psimporter-alert-success {
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    color: #3c763d;
+}
+
+.psimporter-alert-warning {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}
+
+.psimporter-alert-danger {
+    background-color: #f2dede;
+    border-color: #ebccd1;
+    color: #a94442;
+}
+
+/* Import section */
+.psimporter-import-zone {
+    border: 2px dashed #ddd;
+    padding: 40px;
+    text-align: center;
+    margin: 20px 0;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.psimporter-import-zone:hover {
+    border-color: #25b9d7;
+    background: #f0f9fb;
+}
+
+.psimporter-import-zone i {
+    font-size: 48px;
+    color: #25b9d7;
+    margin-bottom: 15px;
+}
+
+/* Progress bar */
+.psimporter-progress {
+    height: 30px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.psimporter-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #25b9d7, #1e9bb8);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Diagnostic results */
+.psimporter-diagnostic {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.psimporter-diagnostic-item {
+    padding: 10px;
+    margin: 5px 0;
+    border-left: 4px solid #ddd;
+}
+
+.psimporter-diagnostic-item.success {
+    border-left-color: #5cb85c;
+    background: #f0f9f0;
+}
+
+.psimporter-diagnostic-item.warning {
+    border-left-color: #f0ad4e;
+    background: #fcf8e3;
+}
+
+.psimporter-diagnostic-item.error {
+    border-left-color: #d9534f;
+    background: #f9f2f2;
+}
+
+.psimporter-diagnostic-item i {
+    margin-right: 8px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .psimporter-fix-button {
+        width: 32%;
+        margin-right: 2%;
+        display: inline-block;
+        vertical-align: top;
+    }
+    
+    .psimporter-fix-button:last-child {
+        margin-right: 0;
+    }
+}
+
+/* Loading spinner */
+.psimporter-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Help text */
+.psimporter-help-block {
+    display: block;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    color: #737373;
+    font-size: 12px;
+}
+
+/* Stats */
+.psimporter-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.psimporter-stat-box {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    flex: 1;
+    margin: 0 10px;
+}
+
+.psimporter-stat-box h3 {
+    margin: 0;
+    font-size: 36px;
+    color: #25b9d7;
+}
+
+.psimporter-stat-box p {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 14px;
+}
